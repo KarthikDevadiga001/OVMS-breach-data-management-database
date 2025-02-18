@@ -1,0 +1,441 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>OVMS - Report Breach</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        :root {
+            --professional-primary: #27ae60;
+            --professional-secondary: #2ecc71;
+            --professional-accent: #16a085;
+            --professional-light: #e8f5e9;
+            --professional-dark: #1e8449;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f5f7fa;
+        }
+
+        .navbar {
+            background: var(--professional-primary);
+            padding: 1rem 0;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            position: fixed;
+            width: 100%;
+            top: 0;
+            z-index: 1000;
+        }
+
+        .navbar .container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 1rem;
+        }
+
+        .logo {
+            color: white;
+            font-size: 1.5rem;
+            font-weight: bold;
+        }
+
+        .nav-links a {
+            color: white;
+            text-decoration: none;
+            padding: 0.5rem 1rem;
+            margin-left: 1rem;
+            border-radius: 4px;
+            transition: all 0.3s ease;
+        }
+
+        .nav-links a:hover {
+            background: var(--professional-dark);
+        }
+
+        .nav-links a.active {
+            background: var(--professional-dark);
+        }
+
+        .page-content {
+            padding-top: 6rem;
+            min-height: calc(100vh - 6rem);
+            background: #f5f7fa;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        .form-container {
+            background: white;
+            padding: 2rem;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            margin: 0 auto;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+        }
+
+        .modal-content {
+            background-color: #fefefe;
+            margin: 15% auto;
+            padding: 20px;
+            border: 1px solid #888;
+            width: 80%;
+            max-width: 500px;
+            border-radius: 5px;
+            text-align: center;
+        }
+
+        .close-modal {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .close-modal:hover {
+            color: black;
+        }
+
+        .modal h2 {
+            margin-top: 10px;
+        }
+
+        .modal p {
+            margin: 20px 0;
+        }
+
+        #errorModal .modal-content {
+            border-left: 4px solid #f44336;
+        }
+
+        #successModal .modal-content {
+            border-left: 4px solid #4CAF50;
+        }
+
+        .system-section {
+            background: #f8f9fa;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            border-radius: 8px;
+            border-left: 4px solid var(--primary-color);
+        }
+
+        .remove-system {
+            margin-top: 1rem;
+        }
+
+        button[type="button"] {
+            margin-bottom: 2rem;
+        }
+
+        .btn-danger {
+            background-color: #dc3545;
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background-color: #c82333;
+        }
+
+        #standard_breach_section select,
+        #custom_breach_section input {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+
+        #breach_type {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            margin-bottom: 1rem;
+        }
+
+        .form-group select option[title] {
+            cursor: help;
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="container">
+            <div class="logo">OVMS</div>
+            <div class="nav-links">
+                <a href="{{ url_for('professional_dashboard') }}">Dashboard</a>
+                <a href="{{ url_for('report_breach') }}" class="active">Report Breach</a>
+                <a href="{{ url_for('logout') }}">Logout</a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Success Modal -->
+    <div id="successModal" class="modal">
+        <div class="modal-content">
+            <span class="close-modal" onclick="closeModal('successModal')">&times;</span>
+            <h2>Success!</h2>
+            <p>Breach report has been successfully submitted.</p>
+            <button onclick="window.location.href='{{ url_for('professional_dashboard') }}'" class="btn btn-primary">Return to Dashboard</button>
+        </div>
+    </div>
+
+    <!-- Error Modal -->
+    <div id="errorModal" class="modal">
+        <div class="modal-content">
+            <span class="close-modal" onclick="closeModal('errorModal')">&times;</span>
+            <h2>Error</h2>
+            <p id="errorMessage">An error occurred while submitting the report.</p>
+            <button onclick="closeModal('errorModal')" class="btn btn-secondary">Close</button>
+        </div>
+    </div>
+
+    <div class="page-content">
+        <div class="container">
+            <div class="form-container">
+                <h2>Report Security Breach</h2>
+                {% with messages = get_flashed_messages() %}
+                    {% if messages %}
+                        {% for message in messages %}
+                            <div class="alert {% if 'success' in message.lower() %}alert-success{% else %}alert-error{% endif %}">
+                                {{ message }}
+                            </div>
+                        {% endfor %}
+                    {% endif %}
+                {% endwith %}
+                
+                <form id="breachForm" method="POST">
+                    <div id="systemsContainer">
+                        <div class="system-section">
+                            <h3>System Information</h3>
+                            <div class="form-group">
+                                <label for="system_id_0">System ID:</label>
+                                <input type="number" id="system_id_0" name="systems[0][system_id]" required min="1" placeholder="Enter unique system identifier">
+                            </div>
+                            <div class="form-group">
+                                <label for="system_name_0">System Name:</label>
+                                <input type="text" id="system_name_0" name="systems[0][system_name]" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="processor_0">Processor:</label>
+                                <input type="text" id="processor_0" name="systems[0][processor]" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="ip_address_0">IP Address:</label>
+                                <input type="text" id="ip_address_0" name="systems[0][ip_address]" required pattern="^(\d{1,3}\.){3}\d{1,3}$" title="Please enter a valid IP address (e.g., 192.168.1.1)">
+                            </div>
+                            <div class="form-group">
+                                <label for="department_0">Department:</label>
+                                <select id="department_0" name="systems[0][department]" required>
+                                    <option value="">Select Department</option>
+                                    {% for dept in departments %}
+                                    <optgroup label="{{ dept.name }}">
+                                        {% for location in dept.locations %}
+                                        <option value="{{ dept.dept_id }}">{{ dept.name }} - {{ location.place_name }} ({{ location.floor }})</option>
+                                        {% endfor %}
+                                    </optgroup>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <button type="button" class="btn btn-secondary" onclick="addSystem()">
+                        <i class="fas fa-plus"></i> Add Another System
+                    </button>
+
+                    <h3>Breach Information</h3>
+                    <div class="form-group">
+                        <label for="breach_type">Breach Type:</label>
+                        <select id="breach_type" onchange="toggleBreachNameInput()">
+                            <option value="standard">Select from Standard Breaches</option>
+                            <option value="custom">Enter Custom Breach</option>
+                        </select>
+                    </div>
+
+                    <div id="standard_breach_section" class="form-group">
+                        <label for="standard_breach_id">Standard Breach Name:</label>
+                        <select id="standard_breach_id" name="standard_breach_id">
+                            <option value="">Select a Standard Breach</option>
+                            {% for breach in standard_breaches %}
+                            <option value="{{ breach.id }}" title="{{ breach.description }}">{{ breach.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div id="custom_breach_section" class="form-group" style="display: none;">
+                        <label for="breach_name">Custom Breach Name:</label>
+                        <input type="text" id="breach_name" name="breach_name" placeholder="Enter new breach name">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="status">Status:</label>
+                        <select id="status" name="status" required>
+                            <option value="Active">Active</option>
+                            <option value="Resolved">Resolved</option>
+                            <option value="Under Investigation">Under Investigation</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="date">Date:</label>
+                        <input type="date" id="date" name="date" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="cvss_score">CVSS Score:</label>
+                        <input type="number" id="cvss_score" name="cvss_score" min="0" max="10" step="0.1" required>
+                    </div>
+
+                    <h3>Compliance Information</h3>
+                    <div class="form-group">
+                        <label for="policy_name">Policy Name:</label>
+                        <input type="text" id="policy_name" name="policy_name" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="policy_year">Policy Year:</label>
+                        <input type="number" id="policy_year" name="policy_year" min="1900" max="2100" required>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary">Submit Report</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function closeModal(modalId) {
+            document.getElementById(modalId).style.display = "none";
+        }
+
+        function showModal(modalId) {
+            document.getElementById(modalId).style.display = "block";
+        }
+
+        // Close modal when clicking outside
+        window.onclick = function(event) {
+            if (event.target.classList.contains('modal')) {
+                event.target.style.display = "none";
+            }
+        }
+
+        let systemCount = 1;
+
+        function addSystem() {
+            const container = document.getElementById('systemsContainer');
+            const newSection = container.children[0].cloneNode(true);
+            
+            // Update IDs and names
+            const inputs = newSection.querySelectorAll('input, select');
+            inputs.forEach(input => {
+                const oldName = input.name;
+                const oldId = input.id;
+                input.name = oldName.replace('[0]', `[${systemCount}]`);
+                input.id = oldId.replace('_0', `_${systemCount}`);
+                input.value = ''; // Clear the value
+            });
+
+            // Update labels
+            const labels = newSection.querySelectorAll('label');
+            labels.forEach(label => {
+                const forAttr = label.getAttribute('for');
+                label.setAttribute('for', forAttr.replace('_0', `_${systemCount}`));
+            });
+
+            // Add remove button
+            const removeBtn = document.createElement('button');
+            removeBtn.type = 'button';
+            removeBtn.className = 'btn btn-danger remove-system';
+            removeBtn.onclick = function() { removeSystem(this); };
+            removeBtn.textContent = 'Remove System';
+            newSection.appendChild(removeBtn);
+
+            container.appendChild(newSection);
+            systemCount++;
+        }
+
+        function removeSystem(button) {
+            button.parentElement.remove();
+        }
+
+        function toggleBreachNameInput() {
+            const breachType = document.getElementById('breach_type').value;
+            const standardSection = document.getElementById('standard_breach_section');
+            const customSection = document.getElementById('custom_breach_section');
+            const standardBreachSelect = document.getElementById('standard_breach_id');
+            const customBreachInput = document.getElementById('breach_name');
+
+            if (breachType === 'standard') {
+                standardSection.style.display = 'block';
+                customSection.style.display = 'none';
+                customBreachInput.value = '';
+                customBreachInput.removeAttribute('required');
+                standardBreachSelect.setAttribute('required', 'required');
+            } else {
+                standardSection.style.display = 'none';
+                customSection.style.display = 'block';
+                standardBreachSelect.value = '';
+                standardBreachSelect.removeAttribute('required');
+                customBreachInput.setAttribute('required', 'required');
+            }
+        }
+
+        // Initialize the form state
+        document.addEventListener('DOMContentLoaded', function() {
+            toggleBreachNameInput();
+        });
+
+        document.getElementById('breachForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const formData = new FormData(this);
+            const submitButton = this.querySelector('button[type="submit"]');
+            submitButton.disabled = true;
+            
+            fetch("{{ url_for('report_breach') }}", {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                submitButton.disabled = false;
+                if (data.success) {
+                    showModal('successModal');
+                    this.reset();
+                } else {
+                    document.getElementById('errorMessage').textContent = data.message || 'Error submitting report';
+                    showModal('errorModal');
+                }
+            })
+            .catch(error => {
+                submitButton.disabled = false;
+                document.getElementById('errorMessage').textContent = 'Network error occurred. Please try again.';
+                showModal('errorModal');
+            });
+        });
+    </script>
+</body>
+</html> 

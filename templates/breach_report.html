@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>OVMS - Breach Report</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        .report-container {
+            max-width: 1200px;
+            margin: 2rem auto;
+            padding: 2rem;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .report-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 2rem;
+            padding-bottom: 1rem;
+            border-bottom: 2px solid #eee;
+        }
+
+        .header-content {
+            flex: 1;
+        }
+
+        .header-actions {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            align-items: flex-end;
+        }
+
+        .report-title {
+            font-size: 1.5rem;
+            color: #333;
+            margin: 0 0 0.5rem 0;
+        }
+
+        .report-date {
+            color: #666;
+            margin: 0;
+        }
+
+        .report-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .info-card {
+            background: #f8f9fa;
+            padding: 1.5rem;
+            border-radius: 8px;
+            border-left: 4px solid var(--primary-color);
+        }
+
+        .info-card h3 {
+            margin-top: 0;
+            color: #333;
+            font-size: 1.2rem;
+        }
+
+        .chart-container {
+            background: white;
+            padding: 1rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            margin-bottom: 2rem;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .severity-badge {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            color: white;
+            font-weight: 500;
+        }
+
+        .severity-critical { background-color: #dc3545; }
+        .severity-high { background-color: #fd7e14; }
+        .severity-medium { background-color: #ffc107; }
+        .severity-low { background-color: #28a745; }
+
+        .status-badge {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-weight: 500;
+            text-align: center;
+            min-width: 120px;
+        }
+
+        .status-active { background-color: #dc3545; color: white; }
+        .status-resolved { background-color: #28a745; color: white; }
+        .status-investigation { background-color: #ffc107; color: black; }
+
+        @media print {
+            .navbar, .print-btn {
+                display: none;
+            }
+            .report-container {
+                margin: 0;
+                padding: 0;
+                box-shadow: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="container">
+            <div class="logo">OVMS</div>
+            <div class="nav-links">
+                <a href="{{ url_for('admin_dashboard') }}">Dashboard</a>
+                <a href="{{ url_for('generate_report') }}">Generate Report</a>
+                <a href="{{ url_for('add_professional') }}">Add Professional</a>
+                <a href="{{ url_for('logout') }}" class="btn-login">Logout</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="page-content">
+        <div class="report-container">
+            <div class="report-header">
+                <div class="header-content">
+                    <h1 class="report-title">Breach Report: {{ breach.name }}</h1>
+                    <p class="report-date">Reported on {{ breach.date.strftime('%B %d, %Y') }}</p>
+                </div>
+                <div class="header-actions">
+                    <button onclick="window.print()" class="btn btn-primary print-btn">Print Report</button>
+                    <span class="status-badge status-{{ breach.status.lower().replace(' ', '-') }}">
+                        {{ breach.status }}
+                    </span>
+                </div>
+            </div>
+
+            <div class="report-grid">
+                <div class="info-card">
+                    <h3>System Information</h3>
+                    <p><strong>System ID:</strong> {{ system.system_id }}</p>
+                    <p><strong>Name:</strong> {{ system.name }}</p>
+                    <p><strong>Processor:</strong> {{ system.processor }}</p>
+                    <p><strong>IP Address:</strong> {{ system.ip_address }}</p>
+                    <p><strong>Department:</strong> {{ system.department.name }}</p>
+                </div>
+
+                <div class="info-card">
+                    <h3>Breach Details</h3>
+                    <p><strong>CVSS Score:</strong> 
+                        <span class="severity-badge severity-{{ get_severity(breach.cvss_score) }}">
+                            {{ breach.cvss_score }}
+                        </span>
+                    </p>
+                    <p><strong>Reported By:</strong> {{ breach.professional.username }}</p>
+                    <p><strong>Policy Name:</strong> {{ compliance.policy_name }}</p>
+                    <p><strong>Policy Year:</strong> {{ compliance.year }}</p>
+                </div>
+            </div>
+
+            <div class="chart-container">
+                <canvas id="cvssChart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // CVSS Score Breakdown Chart
+        const cvssCtx = document.getElementById('cvssChart').getContext('2d');
+        new Chart(cvssCtx, {
+            type: 'radar',
+            data: {
+                labels: ['Impact', 'Exploitability', 'Scope', 'Complexity', 'Privilege Required'],
+                datasets: [{
+                    label: 'CVSS Metrics',
+                    data: [
+                        {{ breach.cvss_score }},
+                        {{ breach.cvss_score * 0.8 }},
+                        {{ breach.cvss_score * 0.6 }},
+                        {{ breach.cvss_score * 0.7 }},
+                        {{ breach.cvss_score * 0.9 }}
+                    ],
+                    backgroundColor: 'rgba(54, 162, 235, 0.2)',
+                    borderColor: 'rgba(54, 162, 235, 1)',
+                    borderWidth: 2
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: true,
+                scales: {
+                    r: {
+                        beginAtZero: true,
+                        max: 10
+                    }
+                }
+            }
+        });
+    </script>
+</body>
+</html> 

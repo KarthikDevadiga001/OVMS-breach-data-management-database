@@ -1,0 +1,454 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>OVMS - Add Professional</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <style>
+        :root {
+            --admin-primary: #2c3e50;
+            --admin-secondary: #34495e;
+            --admin-accent: #3498db;
+            --success-color: #16a34a;
+            --error-color: #dc2626;
+            --neutral-color: #64748b;
+        }
+
+        body {
+            background: #f8fafc;
+            min-height: 100vh;
+            margin: 0;
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+        }
+
+        .navbar {
+            background: var(--admin-primary);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            position: fixed;
+            width: 100%;
+            top: 0;
+            z-index: 1000;
+        }
+
+        .navbar .nav-links a {
+            color: #fff;
+            padding: 0.75rem 1rem;
+            transition: all 0.3s ease;
+            border-radius: 6px;
+        }
+
+        .navbar .nav-links a:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .navbar .nav-links a.active {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .page-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem 1rem;
+            padding-top: 6rem;
+        }
+
+        .page-header {
+            margin-bottom: 2rem;
+            text-align: center;
+        }
+
+        .page-header h2 {
+            color: var(--admin-primary);
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .page-header p {
+            color: var(--neutral-color);
+            font-size: 1.1rem;
+        }
+
+        .form-container {
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 2.5rem;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        }
+
+        .form-group {
+            margin-bottom: 2rem;
+            position: relative;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.75rem;
+            color: var(--admin-primary);
+            font-weight: 500;
+            font-size: 0.95rem;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 0.875rem;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            background: #f8fafc;
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: var(--admin-accent);
+            background: white;
+            box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
+        }
+
+        .username-feedback {
+            position: absolute;
+            right: 0;
+            top: 0;
+            font-size: 0.875rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .username-feedback.available {
+            color: var(--success-color);
+        }
+
+        .username-feedback.taken {
+            color: var(--error-color);
+        }
+
+        .password-requirements {
+            margin-top: 0.75rem;
+            font-size: 0.875rem;
+            color: var(--neutral-color);
+        }
+
+        .password-requirements ul {
+            margin: 0.5rem 0 0 0;
+            padding-left: 1.25rem;
+            list-style-type: none;
+        }
+
+        .password-requirements li {
+            margin-bottom: 0.4rem;
+            color: var(--neutral-color);
+            font-size: 0.875rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .password-requirements li.met {
+            color: var(--success-color);
+        }
+
+        .password-requirements li i {
+            width: 16px;
+        }
+
+        .password-match-feedback {
+            margin-top: 0.5rem;
+            font-size: 0.875rem;
+        }
+
+        .password-match-feedback.match {
+            color: var(--success-color);
+        }
+
+        .password-match-feedback.no-match {
+            color: var(--error-color);
+        }
+
+        .form-actions {
+            display: flex;
+            gap: 1rem;
+            margin-top: 2.5rem;
+        }
+
+        .btn {
+            flex: 1;
+            padding: 0.875rem 1.5rem;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: center;
+            text-decoration: none;
+        }
+
+        .btn-primary {
+            background: var(--admin-accent);
+            color: white;
+        }
+
+        .btn-primary:hover:not(:disabled) {
+            background: #2980b9;
+            transform: translateY(-1px);
+        }
+
+        .btn-primary:disabled {
+            background: #94a3b8;
+            cursor: not-allowed;
+        }
+
+        .btn-secondary {
+            background: #f1f5f9;
+            color: var(--admin-primary);
+        }
+
+        .btn-secondary:hover {
+            background: #e2e8f0;
+        }
+
+        .flash-messages {
+            max-width: 600px;
+            margin: 0 auto 2rem auto;
+        }
+
+        .flash-message {
+            padding: 1rem;
+            border-radius: 8px;
+            font-size: 0.95rem;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .flash-message.success {
+            background-color: #ecfdf5;
+            color: #166534;
+            border: 1px solid #bbf7d0;
+        }
+
+        .flash-message.error {
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fee2e2;
+        }
+
+        .flash-message i {
+            font-size: 1.25rem;
+        }
+
+        @media (max-width: 640px) {
+            .form-container {
+                padding: 1.5rem;
+            }
+
+            .form-actions {
+                flex-direction: column;
+            }
+
+            .btn {
+                width: 100%;
+            }
+        }
+    </style>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="container">
+            <div class="logo">OVMS</div>
+            <div class="nav-links">
+                <a href="{{ url_for('admin_dashboard') }}">Dashboard</a>
+                <a href="{{ url_for('generate_report') }}">Generate Report</a>
+                <a href="{{ url_for('add_professional') }}" class="active">Add Professional</a>
+                <a href="{{ url_for('logout') }}">Logout</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="page-content">
+        <div class="page-header">
+            <h2>Add New Professional</h2>
+            <p>Create a new account for a cybersecurity professional</p>
+        </div>
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                <div class="flash-messages">
+                    {% for category, message in messages %}
+                        <div class="flash-message {{ category }}">
+                            <i class="fas {% if category == 'success' %}fa-check-circle{% else %}fa-exclamation-circle{% endif %}"></i>
+                            {{ message }}
+                        </div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        {% endwith %}
+
+        <div class="form-container">
+            <form id="addProfessionalForm" method="POST" action="{{ url_for('add_professional') }}" class="styled-form">
+                <div class="form-group">
+                    <label for="username">Username</label>
+                    <input type="text" id="username" name="username" required minlength="3" placeholder="Enter username">
+                    <div class="username-feedback"></div>
+                </div>
+
+                <div class="form-group">
+                    <label for="password">Password</label>
+                    <input type="password" id="password" name="password" required minlength="8" placeholder="Enter password">
+                    <div class="password-requirements">
+                        <div>Password requirements:</div>
+                        <ul>
+                            <li id="length">At least 8 characters</li>
+                            <li id="uppercase">One uppercase letter</li>
+                            <li id="lowercase">One lowercase letter</li>
+                            <li id="number">One number</li>
+                            <li id="special">One special character (!@#$%^&*)</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="confirm_password">Confirm Password</label>
+                    <input type="password" id="confirm_password" name="confirm_password" required placeholder="Confirm password">
+                    <div class="password-match-feedback"></div>
+                </div>
+
+                <input type="hidden" name="role" value="professional">
+                
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-primary submit-btn" disabled>Add Professional</button>
+                    <a href="{{ url_for('admin_dashboard') }}" class="btn btn-secondary">Cancel</a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        let usernameTimeout;
+        const usernameInput = document.getElementById('username');
+        const passwordInput = document.getElementById('password');
+        const confirmPasswordInput = document.getElementById('confirm_password');
+        const submitButton = document.querySelector('.submit-btn');
+        const form = document.getElementById('addProfessionalForm');
+
+        // Username availability check
+        usernameInput.addEventListener('input', function() {
+            clearTimeout(usernameTimeout);
+            const username = this.value.trim();
+            const feedback = document.querySelector('.username-feedback');
+
+            if (username.length < 3) {
+                feedback.innerHTML = '';
+                return;
+            }
+
+            usernameTimeout = setTimeout(() => {
+                fetch(`/check_username/${username}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.available) {
+                            feedback.innerHTML = '<i class="fas fa-check-circle"></i> Username available';
+                            feedback.className = 'username-feedback available';
+                        } else {
+                            feedback.innerHTML = '<i class="fas fa-times-circle"></i> Username taken';
+                            feedback.className = 'username-feedback taken';
+                        }
+                        validateForm();
+                    });
+            }, 500);
+        });
+
+        // Password validation
+        function validatePassword(password) {
+            const requirements = {
+                length: password.length >= 8,
+                uppercase: /[A-Z]/.test(password),
+                lowercase: /[a-z]/.test(password),
+                number: /[0-9]/.test(password),
+                special: /[!@#$%^&*]/.test(password)
+            };
+
+            // Update requirement list styling
+            Object.keys(requirements).forEach(req => {
+                const element = document.getElementById(req);
+                if (requirements[req]) {
+                    element.classList.add('met');
+                    element.innerHTML = `<i class="fas fa-check"></i> ${element.textContent}`;
+                } else {
+                    element.classList.remove('met');
+                    element.innerHTML = element.textContent.replace('<i class="fas fa-check"></i> ', '');
+                }
+            });
+
+            return Object.values(requirements).every(Boolean);
+        }
+
+        // Password match validation
+        function validatePasswordMatch() {
+            const password = passwordInput.value;
+            const confirmPassword = confirmPasswordInput.value;
+            const feedback = document.querySelector('.password-match-feedback');
+
+            if (confirmPassword) {
+                if (password === confirmPassword) {
+                    feedback.textContent = 'Passwords match';
+                    feedback.className = 'password-match-feedback match';
+                    return true;
+                } else {
+                    feedback.textContent = 'Passwords do not match';
+                    feedback.className = 'password-match-feedback no-match';
+                    return false;
+                }
+            }
+            return false;
+        }
+
+        // Form validation
+        function validateForm() {
+            const username = usernameInput.value.trim();
+            const usernameFeedback = document.querySelector('.username-feedback');
+            const isUsernameValid = username.length >= 3 && usernameFeedback.classList.contains('available');
+            const isPasswordValid = validatePassword(passwordInput.value);
+            const isPasswordMatch = validatePasswordMatch();
+
+            submitButton.disabled = !(isUsernameValid && isPasswordValid && isPasswordMatch);
+        }
+
+        // Event listeners
+        passwordInput.addEventListener('input', function() {
+            validatePassword(this.value);
+            validatePasswordMatch();
+            validateForm();
+        });
+
+        confirmPasswordInput.addEventListener('input', function() {
+            validatePasswordMatch();
+            validateForm();
+        });
+
+        form.addEventListener('submit', function(e) {
+            if (!validatePassword(passwordInput.value) || !validatePasswordMatch()) {
+                e.preventDefault();
+            }
+        });
+
+        // Clear flash messages after 5 seconds only if it's a success message
+        document.addEventListener('DOMContentLoaded', function() {
+            const flashMessages = document.querySelector('.flash-messages');
+            if (flashMessages) {
+                const successMessage = flashMessages.querySelector('.flash-message.success');
+                if (successMessage) {
+                    setTimeout(function() {
+                        flashMessages.style.display = 'none';
+                        // Redirect to dashboard after showing success message
+                        window.location.href = "{{ url_for('admin_dashboard') }}";
+                    }, 2000);
+                }
+            }
+        });
+    </script>
+</body>
+</html> 

@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>OVMS - Home</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="container">
+            <div class="logo">OVMS</div>
+            <div class="nav-links">
+                <a href="{{ url_for('home') }}" class="active">Home</a>
+                <a href="{{ url_for('about') }}">About</a>
+                <a href="{{ url_for('features') }}">Features</a>
+                <a href="{{ url_for('contact') }}">Contact</a>
+                <a href="{{ url_for('login') }}" class="btn-login">Login</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="hero">
+        <div class="container">
+            <h1>Online Vulnerability Management System</h1>
+            <p>A comprehensive solution for managing and monitoring security vulnerabilities across your organization's systems</p>
+            <a href="{{ url_for('login') }}" class="btn-large">Get Started <i class="fas fa-arrow-right"></i></a>
+        </div>
+    </div>
+
+    <section class="features-section">
+        <h2 class="section-title">Key Features</h2>
+        <p class="section-subtitle">Discover how OVMS can help secure your systems</p>
+        
+        <div class="feature-grid">
+            <div class="feature-card">
+                <i class="fas fa-shield-alt"></i>
+                <h3>Vulnerability Tracking</h3>
+                <p>Track and manage security vulnerabilities across all your systems with real-time monitoring and detailed reporting.</p>
+                <a href="{{ url_for('features', _anchor='vulnerability-tracking') }}" class="learn-more">Learn more <i class="fas fa-chevron-right"></i></a>
+            </div>
+
+            <div class="feature-card">
+                <i class="fas fa-chart-line"></i>
+                <h3>CVSS Scoring</h3>
+                <p>Utilize industry-standard Common Vulnerability Scoring System (CVSS) to assess and prioritize security risks.</p>
+                <a href="{{ url_for('features', _anchor='cvss-scoring') }}" class="learn-more">Learn more <i class="fas fa-chevron-right"></i></a>
+            </div>
+
+            <div class="feature-card">
+                <i class="fas fa-users-cog"></i>
+                <h3>Role-Based Access</h3>
+                <p>Manage user access with role-based authentication for administrators and security professionals.</p>
+                <a href="{{ url_for('features', _anchor='role-based-access') }}" class="learn-more">Learn more <i class="fas fa-chevron-right"></i></a>
+            </div>
+
+            <div class="feature-card">
+                <i class="fas fa-tasks"></i>
+                <h3>Compliance Management</h3>
+                <p>Track and ensure compliance with security policies and industry standards across your organization.</p>
+                <a href="{{ url_for('features', _anchor='compliance-management') }}" class="learn-more">Learn more <i class="fas fa-chevron-right"></i></a>
+            </div>
+
+            <div class="feature-card">
+                <i class="fas fa-file-alt"></i>
+                <h3>Detailed Reporting</h3>
+                <p>Generate comprehensive reports on vulnerability status, trends, and security metrics for better decision-making.</p>
+                <a href="{{ url_for('features', _anchor='detailed-reporting') }}" class="learn-more">Learn more <i class="fas fa-chevron-right"></i></a>
+            </div>
+        </div>
+    </section>
+</body>
+</html> 

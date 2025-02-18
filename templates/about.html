@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>OVMS - About</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="container">
+            <div class="logo">OVMS</div>
+            <div class="nav-links">
+                <a href="{{ url_for('home') }}">Home</a>
+                <a href="{{ url_for('about') }}" class="active">About</a>
+                <span class="nav-link-disabled">Features</span>
+                <a href="{{ url_for('contact') }}">Contact</a>
+                <a href="{{ url_for('login') }}" class="btn-login">Login</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="page-content">
+        <div class="container">
+            <h1>About OVMS</h1>
+            <div class="about-content">
+                <h2>Our Purpose</h2>
+                <p>The Organizational Vulnerability Management System (OVMS) is designed to help organizations maintain detailed records of security breaches and generate comprehensive reports for analysis and compliance purposes.</p>
+                
+                <h2>What We Offer</h2>
+                <p>Our platform provides a centralized system for cybersecurity professionals to document breaches and for administrators to generate detailed reports, helping organizations better understand and respond to security incidents.</p>
+                
+                <h2>Key Benefits</h2>
+                <ul>
+                    <li>Structured breach documentation system</li>
+                    <li>Role-based access control</li>
+                    <li>Comprehensive reporting tools</li>
+                    <li>Secure data storage</li>
+                    <li>Easy-to-use interface for security professionals</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</body>
+</html> 

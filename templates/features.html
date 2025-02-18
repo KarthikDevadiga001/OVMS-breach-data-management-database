@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>OVMS - Features</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="container">
+            <div class="logo">OVMS</div>
+            <div class="nav-links">
+                <a href="{{ url_for('home') }}">Home</a>
+                <a href="{{ url_for('about') }}">About</a>
+                <a href="{{ url_for('features') }}" class="active">Features</a>
+                <a href="{{ url_for('contact') }}">Contact</a>
+                <a href="{{ url_for('login') }}" class="btn-login">Login</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="page-content">
+        <div class="container">
+            <h1 class="section-title">Our Features</h1>
+            <p class="section-subtitle">Explore our comprehensive set of security management features</p>
+
+            <div class="feature-details">
+                <section id="vulnerability-tracking" class="feature-detail-section">
+                    <h2><i class="fas fa-shield-alt"></i> Vulnerability Tracking</h2>
+                    <div class="feature-content">
+                        <p>Our advanced vulnerability tracking system provides:</p>
+                        <ul>
+                            <li>Real-time monitoring of security vulnerabilities</li>
+                            <li>Comprehensive vulnerability assessment tools</li>
+                            <li>Historical tracking and trend analysis</li>
+                            <li>Custom vulnerability classification</li>
+                            <li>Integration with common vulnerability databases</li>
+                        </ul>
+                    </div>
+                </section>
+
+                <section id="cvss-scoring" class="feature-detail-section">
+                    <h2><i class="fas fa-chart-line"></i> CVSS Scoring</h2>
+                    <div class="feature-content">
+                        <p>Industry-standard vulnerability scoring system featuring:</p>
+                        <ul>
+                            <li>Automated CVSS score calculation</li>
+                            <li>Detailed metric breakdowns</li>
+                            <li>Risk assessment prioritization</li>
+                            <li>Temporal and environmental score adjustments</li>
+                            <li>Customizable scoring thresholds</li>
+                        </ul>
+                    </div>
+                </section>
+
+                <section id="role-based-access" class="feature-detail-section">
+                    <h2><i class="fas fa-users-cog"></i> Role-Based Access</h2>
+                    <div class="feature-content">
+                        <p>Secure access control system providing:</p>
+                        <ul>
+                            <li>Granular permission management</li>
+                            <li>Custom role definitions</li>
+                            <li>Access audit logging</li>
+                            <li>Multi-factor authentication support</li>
+                            <li>Session management and monitoring</li>
+                        </ul>
+                    </div>
+                </section>
+
+                <section id="compliance-management" class="feature-detail-section">
+                    <h2><i class="fas fa-tasks"></i> Compliance Management</h2>
+                    <div class="feature-content">
+                        <p>Comprehensive compliance tracking including:</p>
+                        <ul>
+                            <li>Policy compliance monitoring</li>
+                            <li>Automated compliance reporting</li>
+                            <li>Regulatory requirement mapping</li>
+                            <li>Compliance audit trails</li>
+                            <li>Policy version control</li>
+                        </ul>
+                    </div>
+                </section>
+
+                <section id="detailed-reporting" class="feature-detail-section">
+                    <h2><i class="fas fa-file-alt"></i> Detailed Reporting</h2>
+                    <div class="feature-content">
+                        <p>Advanced reporting capabilities offering:</p>
+                        <ul>
+                            <li>Customizable report templates</li>
+                            <li>Real-time data visualization</li>
+                            <li>Automated report generation</li>
+                            <li>Export in multiple formats</li>
+                            <li>Scheduled reporting</li>
+                        </ul>
+                    </div>
+                </section>
+            </div>
+        </div>
+    </div>
+</body>
+</html> 

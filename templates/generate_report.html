@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>OVMS - Generate Report</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <style>
+        .report-container {
+            max-width: 1200px;
+            margin: 2rem auto;
+            padding: 2rem;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            background: #f8f9fa;
+            padding: 1.5rem;
+            border-radius: 8px;
+            text-align: center;
+            border-left: 4px solid var(--primary-color);
+        }
+
+        .stat-number {
+            font-size: 2rem;
+            font-weight: bold;
+            color: var(--primary-color);
+            margin: 0.5rem 0;
+        }
+
+        .chart-container {
+            width: 100%;
+            max-width: 500px;
+            margin: 2rem auto;
+            background: white;
+            padding: 1.5rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .table-container {
+            margin-top: 2rem;
+            overflow-x: auto;
+        }
+
+        .breach-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 1rem;
+        }
+
+        .breach-table th,
+        .breach-table td {
+            padding: 0.75rem;
+            text-align: left;
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        .breach-table th {
+            background-color: #f8fafc;
+            font-weight: 600;
+        }
+
+        .breach-table tr:hover {
+            background-color: #f1f5f9;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-weight: 500;
+            font-size: 0.875rem;
+        }
+
+        .cvss-score {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            color: white;
+            font-weight: 500;
+        }
+
+        .print-btn {
+            float: right;
+            margin-bottom: 1rem;
+        }
+
+        .filter-section {
+            background: white;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .filter-form {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1.5rem;
+            align-items: flex-end;
+        }
+
+        .filter-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .filter-group select,
+        .filter-group input {
+            padding: 0.5rem;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 1rem;
+        }
+
+        .date-range {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+        }
+
+        .date-range label {
+            margin-right: 0.5rem;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 0.5rem 1rem;
+            border: none;
+            border-radius: 4px;
+            font-size: 0.875rem;
+            cursor: pointer;
+            white-space: nowrap;
+            text-decoration: none;
+            display: inline-block;
+            text-align: center;
+            min-width: fit-content;
+            max-width: 150px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+    </style>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="container">
+            <div class="logo">OVMS</div>
+            <div class="nav-links">
+                <a href="{{ url_for('admin_dashboard') }}">Dashboard</a>
+                <a href="{{ url_for('systems_grid') }}">Systems</a>
+                <a href="{{ url_for('generate_report') }}" class="active">Generate Report</a>
+                <a href="{{ url_for('add_professional') }}">Add Professional</a>
+                <a href="{{ url_for('logout') }}" class="btn-login">Logout</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="page-content">
+        <div class="report-container">
+            <button onclick="window.print()" class="btn btn-primary print-btn">Print Report</button>
+            
+            <h2>Security Breach Report</h2>
+
+            <!-- Add Time Filter Section -->
+            <div class="filter-section">
+                <form id="timeFilterForm" method="GET" class="filter-form">
+                    <div class="filter-group">
+                        <label for="time_period">Time Period:</label>
+                        <select id="time_period" name="time_period" onchange="handleTimeChange()">
+                            <option value="all" {% if time_period == 'all' %}selected{% endif %}>All Time</option>
+                            <option value="last_month" {% if time_period == 'last_month' %}selected{% endif %}>Last Month</option>
+                            <option value="last_3_months" {% if time_period == 'last_3_months' %}selected{% endif %}>Last 3 Months</option>
+                            <option value="last_6_months" {% if time_period == 'last_6_months' %}selected{% endif %}>Last 6 Months</option>
+                            <option value="last_year" {% if time_period == 'last_year' %}selected{% endif %}>Last Year</option>
+                            <option value="custom" {% if time_period == 'custom' %}selected{% endif %}>Custom Range</option>
+                        </select>
+                    </div>
+
+                    <div class="filter-group">
+                        <label for="breach_type">Breach Type:</label>
+                        <select id="breach_type" name="breach_type" onchange="this.form.submit()">
+                            <option value="">All Breach Types</option>
+                            {% for breach in standard_breaches %}
+                            <option value="{{ breach.id }}" {% if selected_breach_type|string == breach.id|string %}selected{% endif %}>
+                                {{ breach.name }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    
+                    <div id="customDateRange" class="filter-group" style="display: {% if time_period == 'custom' %}flex{% else %}none{% endif %};">
+                        <div class="date-range">
+                            <label for="start_date">From:</label>
+                            <input type="date" id="start_date" name="start_date" value="{{ start_date if start_date }}">
+                            
+                            <label for="end_date">To:</label>
+                            <input type="date" id="end_date" name="end_date" value="{{ end_date if end_date }}">
+                        </div>
+                        <button type="submit" class="btn btn-primary">Apply Filter</button>
+                    </div>
+                </form>
+            </div>
+            
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <h3>Total Breaches</h3>
+                    <div class="stat-number">{{ total_breaches }}</div>
+                </div>
+                <div class="stat-card">
+                    <h3>Active Breaches</h3>
+                    <div class="stat-number">{{ status_counts['Active'] }}</div>
+                </div>
+                <div class="stat-card">
+                    <h3>Average CVSS</h3>
+                    <div class="stat-number">{{ "%.1f"|format(avg_cvss) }}</div>
+                </div>
+            </div>
+
+            <div class="chart-container">
+                <canvas id="statusChart"></canvas>
+            </div>
+
+            <div class="chart-container">
+                <canvas id="cvssChart"></canvas>
+            </div>
+
+            <div class="table-container">
+                <h3>Detailed Breach Reports</h3>
+                <table class="breach-table">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Name</th>
+                            <th>Status</th>
+                            <th>Date</th>
+                            <th>CVSS Score</th>
+                            <th>Professional</th>
+                            <th>Department</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for breach in breaches %}
+                        <tr>
+                            <td>{{ breach.breach_id }}</td>
+                            <td>{{ breach.name }}</td>
+                            <td>
+                                <span class="status-badge status-{{ breach.status.lower().replace(' ', '-') }}">
+                                    {{ breach.status }}
+                                </span>
+                            </td>
+                            <td>{{ breach.date.strftime('%Y-%m-%d') }}</td>
+                            <td>
+                                <span class="cvss-score severity-{{ get_severity(breach.cvss_score) }}">
+                                    {{ breach.cvss_score }}
+                                </span>
+                            </td>
+                            <td>{{ breach.professional.username }}</td>
+                            <td>{{ breach.systems[0].department.name }}</td>
+                            <td>
+                                <a href="{{ url_for('breach_report', breach_id=breach.breach_id) }}" class="btn btn-sm btn-primary">View Details</a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        window.addEventListener('load', function() {
+            // Status Distribution Chart
+            new Chart(document.getElementById('statusChart'), {
+                type: 'pie',
+                data: {
+                    labels: ['Active', 'Resolved', 'Under Investigation'],
+                    datasets: [{
+                        data: [
+                            {{ status_counts['Active'] }},
+                            {{ status_counts['Resolved'] }},
+                            {{ status_counts['Under Investigation'] }}
+                        ],
+                        backgroundColor: ['#fca5a5', '#86efac', '#fcd34d']
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    aspectRatio: 2,
+                    plugins: {
+                        legend: {
+                            position: 'right',
+                            labels: {
+                                padding: 10
+                            }
+                        },
+                        title: {
+                            display: true,
+                            text: 'Breach Status Distribution'
+                        }
+                    }
+                }
+            });
+
+            // CVSS Score Distribution
+            new Chart(document.getElementById('cvssChart'), {
+                type: 'bar',
+                data: {
+                    labels: ['Critical (9.0-10.0)', 'High (7.0-8.9)', 'Medium (4.0-6.9)', 'Low (0.0-3.9)'],
+                    datasets: [{
+                        data: [
+                            {{ breaches|selectattr('cvss_score', '>=', 9.0)|list|length }},
+                            {{ breaches|selectattr('cvss_score', '>', 6.9)|selectattr('cvss_score', '<', 9.0)|list|length }},
+                            {{ breaches|selectattr('cvss_score', '>', 3.9)|selectattr('cvss_score', '<=', 6.9)|list|length }},
+                            {{ breaches|selectattr('cvss_score', '<=', 3.9)|list|length }}
+                        ],
+                        backgroundColor: ['#dc3545', '#fd7e14', '#ffc107', '#28a745']
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    aspectRatio: 2,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                stepSize: 1
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+                        title: {
+                            display: true,
+                            text: 'CVSS Score Distribution'
+                        }
+                    }
+                }
+            });
+        });
+
+        // Add time filter handling
+        function handleTimeChange() {
+            const timePeriod = document.getElementById('time_period').value;
+            const customDateRange = document.getElementById('customDateRange');
+            if (timePeriod === 'custom') {
+                customDateRange.style.display = 'flex';
+            } else {
+                customDateRange.style.display = 'none';
+                document.getElementById('timeFilterForm').submit();
+            }
+        }
+    </script>
+</body>
+</html> 

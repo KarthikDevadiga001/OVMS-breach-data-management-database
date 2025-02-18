@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>OVMS - Admin Dashboard</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="container">
+            <div class="logo">OVMS</div>
+            <div class="nav-links">
+                <a href="{{ url_for('admin_dashboard') }}" class="active">Dashboard</a>
+                <a href="{{ url_for('generate_report') }}">Generate Report</a>
+                <a href="{{ url_for('add_professional') }}">Add Professional</a>
+                <a href="{{ url_for('logout') }}" class="btn-login">Logout</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="page-content">
+        <div class="container">
+            <h2>Welcome, {{ current_user.username }}</h2>
+            
+            <div class="dashboard-stats">
+                <div class="stat-card">
+                    <h3>Total Breaches</h3>
+                    <div class="stat-number">{{ total_breaches }}</div>
+                </div>
+                <div class="stat-card">
+                    <h3>Active Breaches</h3>
+                    <div class="stat-number">{{ active_breaches }}</div>
+                </div>
+                <div class="stat-card">
+                    <h3>Systems Monitored</h3>
+                    <div class="stat-number">{{ total_systems }}</div>
+                </div>
+            </div>
+
+            <div class="action-buttons">
+                <a href="{{ url_for('add_professional') }}" class="btn btn-primary">Add New Professional</a>
+                <a href="{{ url_for('generate_report') }}" class="btn btn-primary">Generate Report</a>
+            </div>
+
+            <div class="table-container">
+                <h3>Recent Breach Reports</h3>
+                <table class="breach-table">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Name</th>
+                            <th>Status</th>
+                            <th>Date</th>
+                            <th>CVSS Score</th>
+                            <th>Professional</th>
+                            <th>Department</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for breach in breaches %}
+                        <tr>
+                            <td>{{ breach.breach_id }}</td>
+                            <td>{{ breach.name }}</td>
+                            <td><span class="status-badge status-{{ breach.status.lower() }}">{{ breach.status }}</span></td>
+                            <td>{{ breach.date.strftime('%Y-%m-%d') }}</td>
+                            <td><span class="cvss-score severity-{{ get_severity(breach.cvss_score) }}">{{ breach.cvss_score }}</span></td>
+                            <td>{{ breach.professional.username }}</td>
+                            <td>{{ breach.systems[0].department.name }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</body>
+</html> 

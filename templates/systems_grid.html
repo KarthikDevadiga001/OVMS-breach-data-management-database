@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>OVMS - Systems Overview</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <style>
+        .systems-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 2rem;
+            padding: 2rem;
+        }
+
+        .system-card {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            padding: 1.5rem;
+            transition: transform 0.2s;
+        }
+
+        .system-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        }
+
+        .system-icon {
+            font-size: 3rem;
+            color: var(--primary-color);
+            margin-bottom: 1rem;
+            text-align: center;
+        }
+
+        .system-info {
+            text-align: center;
+        }
+
+        .system-name {
+            font-size: 1.2rem;
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+            color: #333;
+        }
+
+        .system-id {
+            color: #666;
+            margin-bottom: 1rem;
+        }
+
+        .breach-info {
+            margin-top: 1rem;
+            padding-top: 1rem;
+            border-top: 1px solid #eee;
+        }
+
+        .breach-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.5rem;
+            font-size: 0.9rem;
+        }
+
+        .cvss-score {
+            display: inline-block;
+            padding: 0.25rem 0.5rem;
+            border-radius: 20px;
+            color: white;
+            font-weight: 500;
+            font-size: 0.8rem;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 0.25rem 0.5rem;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 500;
+        }
+
+        .filters {
+            padding: 1rem 2rem;
+            background: white;
+            margin-bottom: 1rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .filter-group {
+            display: inline-block;
+            margin-right: 2rem;
+        }
+
+        .filter-group label {
+            margin-right: 0.5rem;
+        }
+
+        .department-tag {
+            display: inline-block;
+            padding: 0.25rem 0.5rem;
+            background: #e9ecef;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            color: #495057;
+            margin-bottom: 0.5rem;
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="container">
+            <div class="logo">OVMS</div>
+            <div class="nav-links">
+                <a href="{{ url_for('admin_dashboard') }}">Dashboard</a>
+                <a href="{{ url_for('systems_grid') }}" class="active">Systems</a>
+                <a href="{{ url_for('generate_report') }}">Generate Report</a>
+                <a href="{{ url_for('add_professional') }}">Add Professional</a>
+                <a href="{{ url_for('logout') }}" class="btn-login">Logout</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="page-content">
+        <div class="container">
+            <div class="filters">
+                <div class="filter-group">
+                    <label for="department-filter">Department:</label>
+                    <select id="department-filter">
+                        <option value="">All Departments</option>
+                        {% for dept in departments %}
+                        <option value="{{ dept.name }}">{{ dept.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label for="status-filter">Status:</label>
+                    <select id="status-filter">
+                        <option value="">All Statuses</option>
+                        <option value="Active">Active</option>
+                        <option value="Resolved">Resolved</option>
+                        <option value="Under Investigation">Under Investigation</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="systems-grid">
+                {% for system in systems %}
+                <div class="system-card" data-department="{{ system.department.name }}">
+                    <div class="system-icon">
+                        <i class="fas fa-desktop"></i>
+                    </div>
+                    <div class="system-info">
+                        <h3 class="system-name">{{ system.name }}</h3>
+                        <div class="system-id">System ID: {{ system.system_id }}</div>
+                        <div class="department-tag">{{ system.department.name }}</div>
+                    </div>
+                    <div class="breach-info">
+                        {% for breach in system.breaches %}
+                        <div class="breach-item">
+                            <span class="status-badge status-{{ breach.status.lower().replace(' ', '-') }}">
+                                {{ breach.status }}
+                            </span>
+                            <span class="cvss-score severity-{{ get_severity(breach.cvss_score) }}">
+                                CVSS: {{ breach.cvss_score }}
+                            </span>
+                            <span>{{ breach.date.strftime('%Y-%m-%d') }}</span>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Filter functionality
+        const departmentFilter = document.getElementById('department-filter');
+        const statusFilter = document.getElementById('status-filter');
+        const systemCards = document.querySelectorAll('.system-card');
+
+        function filterSystems() {
+            const selectedDepartment = departmentFilter.value;
+            const selectedStatus = statusFilter.value;
+
+            systemCards.forEach(card => {
+                const department = card.dataset.department;
+                const statuses = Array.from(card.querySelectorAll('.status-badge')).map(badge => badge.textContent.trim());
+                
+                const departmentMatch = !selectedDepartment || department === selectedDepartment;
+                const statusMatch = !selectedStatus || statuses.includes(selectedStatus);
+
+                card.style.display = departmentMatch && statusMatch ? 'block' : 'none';
+            });
+        }
+
+        departmentFilter.addEventListener('change', filterSystems);
+        statusFilter.addEventListener('change', filterSystems);
+    </script>
+</body>
+</html> 
